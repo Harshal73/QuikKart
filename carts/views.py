@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect
 from store.models import product
 from .models import Cart,Cartitem
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -25,14 +26,15 @@ def add_cart(request, product_id):
         cart_item = Cartitem.objects.get(Product=Product, cart=cart)
         cart_item.quantity += 1      #cart_item.quantity = cart_item + 1
         cart_item.save()
-    except cart_item.DoesNotExist:
+    except Cartitem.DoesNotExist:
         cart_item = Cartitem.objects.create(
             Product = Product,
             quantity = 1,
             cart = cart,
         )
         cart_item.save()
-        
+    return HttpResponse(cart_item.Product)
+    exit() 
     return redirect('cart')    
 
 
