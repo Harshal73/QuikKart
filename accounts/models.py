@@ -32,6 +32,7 @@ class MyAccountManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True  # Use is_superuser instead of is_superadmin
         user.save(using=self._db)
+        return user
 
 # Create your models here.
 class Account(AbstractBaseUser):
