@@ -11,7 +11,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-
+from django.http import HttpResponse
 
 def register(request):
     if request.method == 'POST':
@@ -31,7 +31,7 @@ def register(request):
             current_site = get_current_site(request)
             mail_subject = 'Please activate your account'
             
-            verification_email_message = render_to_string('accounts/account_verification_email.html', {
+            message = render_to_string('accounts/account_verification_email.html', {
                 'user': user,
                 'domain': current_site,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),
@@ -39,7 +39,7 @@ def register(request):
             })
 
             to_email = email
-            send_email = EmailMessage(mail_subject, verification_email_message, to=[to_email])
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
             send_email.send()
 
             messages.success(request, 'Registration Successful')
@@ -75,5 +75,13 @@ def logout(request):
     messages.success(request,"You are logged out.")
     return redirect('login')
 
-def activate(request):
-    return
+def activate(request,uidb64,token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user,token):
+        user.is_active = True
+        user.save()
